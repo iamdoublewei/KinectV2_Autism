@@ -129,6 +129,7 @@ class BodyGameRuntime(object):
         # -------- Main Program Loop -----------
         while not self._done:
             depthframesaveformat = np.array([])
+            bodysaveformat = []
             
             # --- Main event loop
             for event in pygame.event.get(): # User did something
@@ -150,7 +151,8 @@ class BodyGameRuntime(object):
                 self.draw_depth_frame(frame, self._frame_surface)
                 
                 #convert depth frame from ctypes to an array so that I can save it
-                depthframesaveformat = np.copy(np.ctypeslib.as_array(self._kinect._depth_frame_data, shape=(self._kinect._depth_frame_data_capacity.value,))) # TODO FIgure out how to solve intermittent up to 3cm differences
+                frame = frame.astype(np.uint8)
+                depthframesaveformat = np.reshape(frame, (424, 512))
                 frame = None
 
             # --- Cool! We have a body frame, so can get skeletons
@@ -165,13 +167,19 @@ class BodyGameRuntime(object):
                         continue 
                     
                     joints = body.joints 
+                    body_joints = []
+                    for joint_id in range(0, PyKinectV2.JointType_Count):
+                        joint = body.joints[joint_id]
+                        body_joints.append([joint.Position.x, joint.Position.y, joint.Position.z])
+                    bodysaveformat.append(body_joints)
+                    
                     # convert joint coordinates to color space 
                     joint_points = self._kinect.body_joints_to_depth_space(joints)
                     self.draw_body(joints, joint_points, SKELETON_COLORS[i])
 
             # save data
             if depthframesaveformat.any():
-                pickle.dump([time.time(), depthframesaveformat], depthfile)
+                pickle.dump([depthframesaveformat, bodysaveformat], depthfile)
             
             self._screen.blit(self._frame_surface, (0,0))
             pygame.display.update()
@@ -183,7 +191,7 @@ class BodyGameRuntime(object):
             pygame.display.flip()
 
             # --- Limit to 60 frames per second
-            self._clock.tick(60)
+            self._clock.tick(20)
 
         # Close our Kinect sensor, close the window and quit.
         self._kinect.close()

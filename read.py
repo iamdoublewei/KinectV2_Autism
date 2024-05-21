@@ -34,23 +34,16 @@ def get_3D_coordinates(filename, show_each_frame = False):
     
     #Iterate over each saved frame of depth data
     depth_file_not_finished = True
+
     while depth_file_not_finished == True:
         try:
-            depthframe = pickle.load(depthdatafile)[1] #each call loads a sucessive frame from a pickle file, so we need to do this once per frame
+            depthframe = pickle.load(depthdatafile)[0] #each call loads a sucessive frame from a pickle file, so we need to do this once per frame
+            #print(depthframe[2])
             
             three_D_pixel_positions_in_frame =[] # list to store the 3D pixel positions from one frame
-            
-            #Defines to allow colour pixel mapping to 3D coords to work correctly     
-            ctypes_depth_frame = np.ctypeslib.as_ctypes(depthframe.flatten())
-            L = depthframe.size
-            kinect._mapper.MapColorFrameToCameraSpace(L, ctypes_depth_frame, S, csps1)
-            
+                     
             #Carry out certain actions if you want an image of where all the tracked points are in the depth data (makes program 20x slower)
-            if show_each_frame == True:
-                
-                #Note the method on the line below, for finding the corrsponding depth pixel of a single tracked pixel in the colour image, is NOT what I am using to find the 3D position of a colour pixel
-                kinect._mapper.MapColorFrameToDepthSpace(ctypes.c_uint(512 * 424), ctypes_depth_frame, ctypes.c_uint(1920 * 1080), color2depth_points)
-    
+            if show_each_frame == True:                 
                 cut_down_depth_frame = depthframe.astype(np.uint8)
                 cut_down_depth_frame = np.reshape(cut_down_depth_frame, (424, 512))
                
