@@ -12,6 +12,7 @@ import numpy as np
 import pickle
 import pandas as pd
 import time
+import os
 
 if sys.hexversion >= 0x03000000:
     import _thread as thread
@@ -114,8 +115,7 @@ class BodyGameRuntime(object):
 
     def draw_depth_frame(self, frame, target_surface):
         target_surface.lock()
-        f8 = np.uint8(frame.clip(1, 4000) / 16.)
-        frame8bit = np.dstack((f8, f8, f8))
+        frame8bit = np.dstack((frame, frame, frame))
         address = self._kinect.surface_as_array(target_surface.get_buffer())
         ctypes.memmove(address, frame8bit.ctypes.data, frame8bit.size)
         del address
@@ -146,6 +146,7 @@ class BodyGameRuntime(object):
             # --- Woohoo! We've got a color frame! Let's fill out back buffer surface with frame's data 
             if self._kinect.has_new_depth_frame():
                 frame = self._kinect.get_last_depth_frame() 
+                frame = np.uint8(frame.clip(1, 4000) / 16.)
                 
                 # draw for display
                 self.draw_depth_frame(frame, self._frame_surface)               
@@ -174,16 +175,21 @@ class BodyGameRuntime(object):
                     self.draw_body(joints, joint_points, SKELETON_COLORS[i])
 
             # only dump data when body tracked
-            if tracked:
+            if tracked:                 
                 if start_time:
                     pickle.dump([frame, bodysaveformat], depthfile)
                     # maximum 10 minute for a file
                     if time.time() - start_time > 600:
                         start_time = 0
                         depthfile.close()
-                else:
+                else:                   
+                    # create directory if not exists
+                    path = 'C:/Users/Wei Wei/Documents/kinect/' + str(date.today()) + '/'
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                    
                     start_time = int(time.time())
-                    depthfile = open(str(start_time) +".pickle", 'wb')
+                    depthfile = open(path + str(start_time) +'.pickle', 'wb')
             else:
                 if depthfile != None:
                     start_time = 0

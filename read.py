@@ -107,8 +107,7 @@ class BodyGameRuntime(object):
 
     def draw_depth_frame(self, frame, target_surface):
         target_surface.lock()
-        f8 = np.uint8(frame.clip(1, 4000) / 16.)
-        frame8bit = np.dstack((f8, f8, f8))
+        frame8bit = np.dstack((frame, frame, frame))
         address = self._kinect.surface_as_array(target_surface.get_buffer())
         ctypes.memmove(address, frame8bit.ctypes.data, frame8bit.size)
         del address
@@ -152,4 +151,4 @@ if __name__ == '__main__':
     game = BodyGameRuntime()
     #replace name below with the corresponding section of the name of your saved depth data (for reference, the full name of my saved depth data file was DEPTH.test.1.29.13.17.pickle)
 
-    game.run('1716253345')
+    game.run('1716254773')
