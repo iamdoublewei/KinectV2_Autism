@@ -121,11 +121,11 @@ class BodyGameRuntime(object):
         del address
         target_surface.unlock()
     
-    def run(self, file):
-        # define file names
-        depthfilename = file +".pickle"
-        depthfile = open(depthfilename, 'wb')
-    
+    def run(self):        
+        tracked = False
+        depthfile = None
+        start_time = 0
+        
         # -------- Main Program Loop -----------
         while not self._done:
             frame = np.array([])
@@ -159,8 +159,9 @@ class BodyGameRuntime(object):
                 for i in range(0, self._kinect.max_body_count):
                     body = self._bodies.bodies[i]
                     if not body.is_tracked: 
-                        continue 
-                    
+                        continue                         
+                        
+                    tracked = True
                     joints = body.joints 
                     body_joints = []
                     for joint_id in range(0, PyKinectV2.JointType_Count):
@@ -172,9 +173,24 @@ class BodyGameRuntime(object):
                     joint_points = self._kinect.body_joints_to_depth_space(joints)
                     self.draw_body(joints, joint_points, SKELETON_COLORS[i])
 
-            # save data
-            if frame.any():
-                pickle.dump([frame, bodysaveformat], depthfile)
+            # only dump data when body tracked
+            if tracked:
+                if start_time:
+                    pickle.dump([frame, bodysaveformat], depthfile)
+                    # maximum 10 minute for a file
+                    if time.time() - start_time > 600:
+                        start_time = 0
+                        depthfile.close()
+                else:
+                    start_time = int(time.time())
+                    depthfile = open(str(start_time) +".pickle", 'wb')
+            else:
+                if depthfile != None:
+                    start_time = 0
+                    depthfile.close()
+                    
+            tracked = False
+                
             
             self._screen.blit(self._frame_surface, (0,0))
             pygame.display.update()
@@ -186,7 +202,7 @@ class BodyGameRuntime(object):
             pygame.display.flip()
 
             # --- Limit to 60 frames per second
-            self._clock.tick(20)
+            self._clock.tick(10)
 
         # Close our Kinect sensor, close the window and quit.
         self._kinect.close()
@@ -196,5 +212,5 @@ class BodyGameRuntime(object):
 __main__ = "Kinect v2 Body Game"
 game = BodyGameRuntime()
 
-game.run(str(date.today()))
+game.run()
 

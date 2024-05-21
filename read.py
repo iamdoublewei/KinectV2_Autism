@@ -138,7 +138,7 @@ class BodyGameRuntime(object):
                 pygame.display.flip()
 
                 # --- Limit to 60 frames per second
-                self._clock.tick(20)
+                self._clock.tick(10)
                     
            #close loop at end of file
             except EOFError:
@@ -152,4 +152,4 @@ if __name__ == '__main__':
     game = BodyGameRuntime()
     #replace name below with the corresponding section of the name of your saved depth data (for reference, the full name of my saved depth data file was DEPTH.test.1.29.13.17.pickle)
 
-    game.run('2024-05-20')
+    game.run('1716253345')
