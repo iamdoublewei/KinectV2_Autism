@@ -128,7 +128,7 @@ class BodyGameRuntime(object):
     
         # -------- Main Program Loop -----------
         while not self._done:
-            depthframesaveformat = np.array([])
+            frame = np.array([])
             bodysaveformat = []
             
             # --- Main event loop
@@ -148,12 +148,7 @@ class BodyGameRuntime(object):
                 frame = self._kinect.get_last_depth_frame() 
                 
                 # draw for display
-                self.draw_depth_frame(frame, self._frame_surface)
-                
-                #convert depth frame from ctypes to an array so that I can save it
-                frame = frame.astype(np.uint8)
-                depthframesaveformat = np.reshape(frame, (424, 512))
-                frame = None
+                self.draw_depth_frame(frame, self._frame_surface)               
 
             # --- Cool! We have a body frame, so can get skeletons
             if self._kinect.has_new_body_frame(): 
@@ -178,8 +173,8 @@ class BodyGameRuntime(object):
                     self.draw_body(joints, joint_points, SKELETON_COLORS[i])
 
             # save data
-            if depthframesaveformat.any():
-                pickle.dump([depthframesaveformat, bodysaveformat], depthfile)
+            if frame.any():
+                pickle.dump([frame, bodysaveformat], depthfile)
             
             self._screen.blit(self._frame_surface, (0,0))
             pygame.display.update()
@@ -199,7 +194,7 @@ class BodyGameRuntime(object):
 
 
 __main__ = "Kinect v2 Body Game"
-game = BodyGameRuntime();
+game = BodyGameRuntime()
 
-game.run(str(date.today()));
+game.run(str(date.today()))
 
