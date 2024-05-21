@@ -1,15 +1,12 @@
 from pykinect2 import PyKinectV2
 from pykinect2.PyKinectV2 import *
 from pykinect2 import PyKinectRuntime
-
+from datetime import date
 import numpy as np
 import pickle
 import pygame
 import ctypes
 import os
-parentDirectory = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-
-
 
 # colors for drawing different bodies 
 SKELETON_COLORS = [pygame.color.THECOLORS["red"], 
@@ -50,17 +47,6 @@ class BodyGameRuntime(object):
 
 
     def draw_body_bone(self, joints, jointPoints, color, joint0, joint1):
-        joint0State = joints[joint0].TrackingState;
-        joint1State = joints[joint1].TrackingState;
-
-        # both joints are not tracked
-        if (joint0State == PyKinectV2.TrackingState_NotTracked) or (joint1State == PyKinectV2.TrackingState_NotTracked): 
-            return
-
-        # both joints are not *really* tracked
-        if (joint0State == PyKinectV2.TrackingState_Inferred) and (joint1State == PyKinectV2.TrackingState_Inferred):
-            return
-
         # ok, at least one is good 
         start = (jointPoints[joint0].x, jointPoints[joint0].y)
         end = (jointPoints[joint1].x, jointPoints[joint1].y)
@@ -126,10 +112,24 @@ class BodyGameRuntime(object):
             try:
                 data = pickle.load(depthdatafile) #each call loads a sucessive frame from a pickle file, so we need to do this once per frame
                 frame = data[0]
-                   
+                bodies = data[1]
+                
                 # draw for display
                 self.draw_depth_frame(frame, self._frame_surface)  
                 
+                # draw skeleton
+                for body_id in range(0, len(bodies)):
+                    joints = ctypes.POINTER(PyKinectV2._Joint)
+                    joints_capacity = ctypes.c_uint(PyKinectV2.JointType_Count)
+                    joints_data_type = PyKinectV2._Joint * joints_capacity.value
+                    joints = ctypes.cast(joints_data_type(), ctypes.POINTER(PyKinectV2._Joint))
+                    for joint_id in range(0, PyKinectV2.JointType_Count): 
+                        joints[joint_id].Position.x = bodies[body_id][joint_id][0]
+                        joints[joint_id].Position.y = bodies[body_id][joint_id][1]
+                        joints[joint_id].Position.z = bodies[body_id][joint_id][2]
+                    joint_points = self._kinect.body_joints_to_depth_space(joints)
+                    self.draw_body(joints, joint_points, SKELETON_COLORS[body_id])
+                    
                 self._screen.blit(self._frame_surface, (0,0))
                 pygame.display.update()            
             
@@ -150,5 +150,6 @@ class BodyGameRuntime(object):
 if __name__ == '__main__': 
     game = BodyGameRuntime()
     #replace name below with the corresponding section of the name of your saved depth data (for reference, the full name of my saved depth data file was DEPTH.test.1.29.13.17.pickle)
+    path = 'C:/Users/Wei Wei/Documents/kinect/' + str(date.today()) + '/' + '1716299815'
 
-    game.run('1716254773')
+    game.run(path)

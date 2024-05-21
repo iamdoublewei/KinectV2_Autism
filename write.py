@@ -58,16 +58,16 @@ class BodyGameRuntime(object):
 
 
     def draw_body_bone(self, joints, jointPoints, color, joint0, joint1):
-        joint0State = joints[joint0].TrackingState;
-        joint1State = joints[joint1].TrackingState;
+        #joint0State = joints[joint0].TrackingState;
+        #joint1State = joints[joint1].TrackingState;
 
         # both joints are not tracked
-        if (joint0State == PyKinectV2.TrackingState_NotTracked) or (joint1State == PyKinectV2.TrackingState_NotTracked): 
-            return
+        #if (joint0State == PyKinectV2.TrackingState_NotTracked) or (joint1State == PyKinectV2.TrackingState_NotTracked): 
+        #    return
 
         # both joints are not *really* tracked
-        if (joint0State == PyKinectV2.TrackingState_Inferred) and (joint1State == PyKinectV2.TrackingState_Inferred):
-            return
+        #if (joint0State == PyKinectV2.TrackingState_Inferred) and (joint1State == PyKinectV2.TrackingState_Inferred):
+        #    return
 
         # ok, at least one is good 
         start = (jointPoints[joint0].x, jointPoints[joint0].y)
@@ -162,9 +162,10 @@ class BodyGameRuntime(object):
                     if not body.is_tracked: 
                         continue                         
                         
+                    # store skeleton data for storage
                     tracked = True
                     joints = body.joints 
-                    body_joints = []
+                    body_joints = []                                      
                     for joint_id in range(0, PyKinectV2.JointType_Count):
                         joint = body.joints[joint_id]
                         body_joints.append([joint.Position.x, joint.Position.y, joint.Position.z])
@@ -196,13 +197,9 @@ class BodyGameRuntime(object):
                     depthfile.close()
                     
             tracked = False
-                
-            
+                           
             self._screen.blit(self._frame_surface, (0,0))
-            pygame.display.update()
-
-            # store data
-            
+            pygame.display.update()            
             
             # --- Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
