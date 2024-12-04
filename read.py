@@ -1,7 +1,7 @@
 from pykinect2 import PyKinectV2
 from pykinect2.PyKinectV2 import *
 from pykinect2 import PyKinectRuntime
-from datetime import date
+from datetime import date, datetime
 import numpy as np
 import pickle
 import pygame
@@ -100,10 +100,11 @@ class BodyGameRuntime(object):
         target_surface.unlock()
         
     #REMEBER TO HAVE A KINECT CONNECTED (OR KINECT STUDIO REPLAYING A RECORDING) WHEN RUNNING, EVEN THOUGH WE ARE OPERATING OFF SAVED DATA!
-    def run(self, filename):    
+    def run(self, filename, unix):    
         
         #load your saved depth data
-        depthdatafile = open(filename + ".pickle", "rb")
+        depthdatafile = open(filename + unix + ".pickle", "rb")
+        current_time = int(unix)
         
         #Iterate over each saved frame of depth data
         depth_file_not_finished = True
@@ -131,13 +132,18 @@ class BodyGameRuntime(object):
                     self.draw_body(joints, joint_points, SKELETON_COLORS[body_id])
                     
                 self._screen.blit(self._frame_surface, (0,0))
+                
+                # add timestamp
+                self._screen.blit(pygame.font.SysFont('Arial', 22).render(str(datetime.fromtimestamp(current_time)), True, pygame.color.THECOLORS["red"]), (0, 0))
+                
                 pygame.display.update()            
             
                 # --- Go ahead and update the screen with what we've drawn.
                 pygame.display.flip()
 
-                # --- Limit to 60 frames per second
-                self._clock.tick(10)
+                # --- Limit to 10 frames per second
+                self._clock.tick(50)
+                current_time += 0.1
                     
            #close loop at end of file
             except EOFError:
@@ -150,6 +156,8 @@ class BodyGameRuntime(object):
 if __name__ == '__main__': 
     game = BodyGameRuntime()
     #replace name below with the corresponding section of the name of your saved depth data (for reference, the full name of my saved depth data file was DEPTH.test.1.29.13.17.pickle)
-    path = 'C:/Users/Wei Wei/Documents/kinect/' + str(date.today()) + '/' + '1716299815'
-
-    game.run(path)
+    #path = 'C:/Users/Wei Wei/Documents/kinect/' + '2024-05-22' + '/' 
+    path = 'D:/kinect/' + '2024-12-02' + '/'
+    unix = '1733170088'
+    
+    game.run(path, unix)
